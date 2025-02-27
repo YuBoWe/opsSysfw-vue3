@@ -46,9 +46,16 @@
 
 <script lang="ts" setup>
 import { reactive, ref, getCurrentInstance, inject } from "vue";
-import type { ComponentSize, FormInstance, FormRules } from "element-plus";
+import {
+  ComponentSize,
+  FormInstance,
+  FormRules,
+  ElMessage,
+} from "element-plus";
 import type { AxiosInstance } from "axios";
+import { useRouter, useRoute } from "vue-router";
 
+const $router = useRouter();
 const http = inject<AxiosInstance>("http");
 interface RuleForm {
   username: string;
@@ -79,22 +86,20 @@ const login = (formEl: FormInstance | undefined) => {
   formEl.validate(async (valid) => {
     if (valid) {
       console.log(LoginForm);
-      const { data: response } = await http.post("post", LoginForm);
+      const { data: response } = await http.post("token/", LoginForm);
       console.log(response);
       console.log(response.data);
-
-      // http
-      //   .post("post", LoginForm)
-      //   .then(function (response) {
-      //     console.log(response);
-      //     console.log(response.data);
-      //     console.log(response.data.data);
-
-      //     console.log(response.status);
-      //   })
-      //   .catch(function (error) {
-      //     console.log(error);
-      //   });
+      console.log(response.code);
+      if (response.code) {
+        // 此处使用后端发来的code作为判断，有code就是有异常，无code就是登录成功
+        ElMessage({
+          message: response.message,
+          type: "error",
+        });
+      } else {
+        window.localStorage.setItem("token", response.access);
+        $router.push("/home");
+      }
     } else {
       console.log(formEl);
     }

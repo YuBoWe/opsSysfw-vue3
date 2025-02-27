@@ -6,7 +6,7 @@ import 'element-plus/dist/index.css'
 import './assets/css/main.css'
 import axios from 'axios'
 
-axios.defaults.baseURL = 'https://httpbin.org';
+axios.defaults.baseURL = '/api';
 
 
 const app = createApp(App)

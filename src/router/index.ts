@@ -1,32 +1,47 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Login from '../views/LoginView.vue'
 import Home from '../views/HomeView.vue'
-
+import User from '../views/users/UserView.vue'
+import Role from  '../views/users/UserRolesView.vue'
+import Welcome from '../views/WelcomeView.vue'
 
 // 定义路由
 const routes = [
   { path: '/', redirect: '/login'},
   { path: '/login', component: Login },
-  { path: '/home', component: Home }
+  { 
+    path: '/home',
+    component: Home,
+    redirect: '/welcome', // 使用相对路径
+    children: [
+      { path: 'users', component: User, name: '用户列表'}, // 子路由路径不以 '/' 开头
+      { path: 'users/roles', component: Role, name: '角色管理'},
+      { path: '/welcome', component: Welcome, name: '欢迎页'}, // 子路由路径不以 '/' 开头
+      // ...other sub routes
+    ] 
+  },
   // 其他路由...
 ];
 
 // 创建路由实例
-const router = createRouter({
-  history: createWebHistory(), // 使用 History 模式
-  routes,
+const router = createRouter({ 
+  history: createWebHistory(),
+  routes
 });
 
+// 全局前置守卫
 router.beforeEach((to, from, next) => {
-  console.log(to);
-  console.log(from);
-  if(window.localStorage.getItem('token') || to.path === '/login'){
-    next()
+  if (to.path === '/login') {
+    next();
+  } else {
+    const token = window.localStorage.getItem('token');
+    console.log(token);
+    if (token) {
+      next();
+    } else {
+      next('/login');
+    }
   }
-  else {
-    router.push('/')
-  }
-
 })
 
 export default router;

@@ -29,7 +29,7 @@ axios.interceptors.response.use(function (response) {
   console.log(33333);
   
   console.log(response);
-  if ( response.data && response.data.code && response.data.code < 10000){
+  if ( response.data && response.data.code && response.data.code > 1000){
     window.localStorage.removeItem('token')
     router.push('/')
   }

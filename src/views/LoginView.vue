@@ -8,7 +8,7 @@
         :model="LoginForm"
         :rules="rules"
         class="login_form"
-        label-width="auto"
+        label-width="68px"
         ref="ruleFormRef"
         :size="formSize"
       >

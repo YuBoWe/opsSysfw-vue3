@@ -9,7 +9,22 @@
         /></el-icon>
       </div>
       <div class="person">
-        <el-button type="info" @click="exit()">退出</el-button>
+        <el-dropdown trigger="hover" @command="handleCommand">
+          <RouterLink to="/welcome">
+            <el-avatar> {{ userInfo.username }} </el-avatar></RouterLink
+          >
+
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item :icon="EditPen" command="chpwd"
+                >修改密码</el-dropdown-item
+              >
+              <el-dropdown-item :icon="SwitchButton" command="exit" divided
+                >退出</el-dropdown-item
+              >
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
     </el-header>
     <el-container>
@@ -46,15 +61,163 @@
       </el-main>
     </el-container>
   </el-container>
+  <!-- 修改密码 -->
+  <el-dialog
+    v-model="chpwdDialogFormVisible"
+    title="修改用户"
+    width="500"
+    @closed="resetForm(chpwdFormRef)"
+    draggable
+  >
+    <el-form
+      :model="chpwdFormData"
+      ref="chpwdFormRef"
+      :rules="chpwdRules"
+      :size="formSize"
+      label-width="auto"
+    >
+      <el-form-item prop="username" label="用户名"
+        >{{ userInfo.username }}
+      </el-form-item>
+      <el-form-item prop="oldpass" label="旧密码">
+        <el-input
+          v-model="chpwdFormData.oldpass"
+          type="password"
+          placeholder="请输入前密码"
+          show-password
+        />
+      </el-form-item>
+      <el-form-item prop="newpass" label="新密码">
+        <el-input
+          v-model="chpwdFormData.newpass"
+          type="password"
+          placeholder="请设置新密码"
+          show-password
+        />
+      </el-form-item>
+      <el-form-item prop="checkpass" label="确认密码">
+        <el-input
+          v-model="chpwdFormData.checkpass"
+          placeholder="请确认新密码"
+          type="password"
+          show-password
+        />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="chpwdDialogFormVisible = false">取消</el-button>
+        <el-button type="primary" @click="chpwd(chpwdFormRef)">
+          确认
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 
 
 <script lang="ts" setup>
 import { useRouter, useRoute } from "vue-router";
 import { reactive, inject, onBeforeMount, ref } from "vue";
+import {
+  FormRules,
+  FormInstance,
+  ComponentSize,
+  ElMessage,
+  ElMessageBox,
+} from "element-plus";
 import type { AxiosInstance } from "axios";
 
 const http = inject<AxiosInstance>("http");
+// 修改密码
+interface chpwdUserForm {
+  oldpass: string;
+  newpass: string;
+  checkpass: string;
+}
+var chpwdDialogFormVisible = ref(false);
+const chpwdFormRef = ref<FormInstance>();
+const chpwdFormData = reactive<chpwdUserForm>({
+  oldpass: "",
+  newpass: "",
+  checkpass: "",
+});
+
+const validatePass = (rule: any, value: any, callback: any) => {
+  if (value === "") {
+    callback(new Error("请再次确认密码"));
+  } else if (value !== chpwdFormData.newpass) {
+    callback(new Error("两次密码不一致"));
+  } else {
+    callback();
+  }
+};
+
+const chpwdRules = reactive<FormRules<chpwdUserForm>>({
+  oldpass: [
+    { required: true, message: "请输入旧密码", trigger: "blur" },
+    { min: 6, max: 15, message: "Length should be 6 to 15", trigger: "blur" },
+  ],
+  newpass: [
+    { required: true, message: "请输入新密码", trigger: "blur" },
+    { min: 6, max: 15, message: "Length should be 6 to 15", trigger: "blur" },
+  ],
+  checkpass: [{ validator: validatePass, trigger: "blur" }],
+});
+const formSize = ref<ComponentSize>("default");
+
+const chpwd = (formEl: FormInstance | undefined) => {
+  if (!formEl) return;
+  formEl.validate(async (vaild) => {
+    const { data: response } = await http.post(
+      `users/${userInfo.id}/setpwd/`,
+      chpwdFormData
+    );
+    if (response.code) {
+      ElMessage({
+        message: response.message,
+        type: "error",
+      });
+    } else {
+      const username = userInfo.username;
+      ElMessage.success(`用户${username}密码修改成功`);
+      chpwdDialogFormVisible.value = false;
+    }
+  });
+
+  console.log("修改密码");
+};
+const resetForm = (formEl: FormInstance | undefined) => {
+  if (!formEl) return;
+  formEl.resetFields();
+};
+
+// 右上角用户下拉菜单
+import { SwitchButton, EditPen } from "@element-plus/icons-vue";
+const handleCommand = (command: string | number | object) => {
+  if (command === "exit") {
+    exit();
+  } else if (command === "chpwd") {
+    chpwdDialogFormVisible.value = true;
+  }
+};
+
+// 获取登录用户信息
+interface userForm {
+  id: number;
+  username: string;
+}
+const userInfo = reactive<userForm>({
+  id: 0,
+  username: "",
+});
+
+const get_userinfo = async () => {
+  const { data: response } = await http.get("users/whoami/");
+  console.log(response);
+  userInfo.id = response.user.id;
+  userInfo.username = response.user.username;
+};
 
 // 退出登录
 const $router = useRouter();
@@ -81,6 +244,7 @@ const get_menu = async () => {
 };
 onBeforeMount(() => {
   get_menu();
+  get_userinfo();
 });
 
 // 折叠菜单
@@ -92,11 +256,11 @@ const isCollapse = ref(false);
   height: 100%;
 }
 .el-aside {
-  background-color: aliceblue;
+  background-color: #2c3e50;
 }
 
 .el-main {
-  background-color: #fafafa;
+  background-color: #ecf0f1;
 }
 
 .el-menu {
@@ -123,6 +287,6 @@ const isCollapse = ref(false);
   display: flex;
   justify-content: space-between;
   padding-left: 5px;
-  background-color: #c0c4cc;
+  background-color: aliceblue;
 }
 </style>

@@ -127,6 +127,10 @@ import {
   ElMessageBox,
 } from "element-plus";
 import type { AxiosInstance } from "axios";
+import { usePage } from "../hooks";
+
+// 获取登录用户信息
+const { userInfo, get_userinfo, resetForm } = usePage();
 
 const http = inject<AxiosInstance>("http");
 // 修改密码
@@ -170,7 +174,7 @@ const chpwd = (formEl: FormInstance | undefined) => {
   if (!formEl) return;
   formEl.validate(async (vaild) => {
     const { data: response } = await http.post(
-      `users/${userInfo.id}/setpwd/`,
+      `users/mgr/${userInfo.id}/setpwd/`,
       chpwdFormData
     );
     if (response.code) {
@@ -187,10 +191,6 @@ const chpwd = (formEl: FormInstance | undefined) => {
 
   console.log("修改密码");
 };
-const resetForm = (formEl: FormInstance | undefined) => {
-  if (!formEl) return;
-  formEl.resetFields();
-};
 
 // 右上角用户下拉菜单
 import { SwitchButton, EditPen } from "@element-plus/icons-vue";
@@ -202,22 +202,22 @@ const handleCommand = (command: string | number | object) => {
   }
 };
 
-// 获取登录用户信息
-interface userForm {
-  id: number;
-  username: string;
-}
-const userInfo = reactive<userForm>({
-  id: 0,
-  username: "",
-});
+//
+// interface userForm {
+//   id: number;
+//   username: string;
+// }
+// const userInfo = reactive<userForm>({
+//   id: 0,
+//   username: "",
+// });
 
-const get_userinfo = async () => {
-  const { data: response } = await http.get("users/whoami/");
-  console.log(response);
-  userInfo.id = response.user.id;
-  userInfo.username = response.user.username;
-};
+// const get_userinfo = async () => {
+//   const { data: response } = await http.get("users/mgr/whoami/");
+//   console.log(response);
+//   userInfo.id = response.user.id;
+//   userInfo.username = response.user.username;
+// };
 
 // 退出登录
 const $router = useRouter();

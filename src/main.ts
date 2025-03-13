@@ -12,7 +12,7 @@ axios.defaults.baseURL = '/api';
 // 添加请求拦截器
 axios.interceptors.request.use((config)=>{
   // 在发送请求之前做些什么
-  console.log(config);
+  // console.log(config);
   if(config.url !== 'token/') {
     const token = window.localStorage.getItem('token')
     if (token) {
@@ -26,9 +26,9 @@ axios.interceptors.request.use((config)=>{
 axios.interceptors.response.use(function (response) {
   // 2xx 范围内的状态码都会触发该函数。
   // 对响应数据做点什么
-  console.log(33333);
+  // console.log(33333);
   
-  console.log(response);
+  // console.log(response);
   if ( response.data && response.data.code && response.data.code > 1000){
     window.localStorage.removeItem('token')
     router.push('/')

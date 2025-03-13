@@ -54,6 +54,10 @@ import {
 } from "element-plus";
 import type { AxiosInstance } from "axios";
 import { useRouter, useRoute } from "vue-router";
+import { usePage } from "../hooks";
+
+// 重置表单
+const { resetForm } = usePage();
 
 const $router = useRouter();
 const http = inject<AxiosInstance>("http");
@@ -104,11 +108,6 @@ const login = (formEl: FormInstance | undefined) => {
       console.log(formEl);
     }
   });
-};
-
-const resetForm = (formEl: FormInstance | undefined) => {
-  if (!formEl) return;
-  formEl.resetFields();
 };
 </script>
 

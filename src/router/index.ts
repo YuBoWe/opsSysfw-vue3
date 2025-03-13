@@ -4,6 +4,7 @@ import Home from '../views/HomeView.vue'
 import User from '../views/users/UserView.vue'
 import Role from  '../views/users/UserRolesView.vue'
 import Welcome from '../views/WelcomeView.vue'
+import Perm from '../views/users/PermView.vue'
 
 // 定义路由
 const routes = [
@@ -16,6 +17,7 @@ const routes = [
     children: [
       { path: 'users', component: User, name: '用户列表'}, // 子路由路径不以 '/' 开头
       { path: 'users/roles', component: Role, name: '角色管理'},
+      { path: 'users/perm', component: Perm, name: '权限列表'},
       { path: '/welcome', component: Welcome, name: '欢迎页'}, // 子路由路径不以 '/' 开头
       // ...other sub routes
     ] 
@@ -35,7 +37,7 @@ router.beforeEach((to, from, next) => {
     next();
   } else {
     const token = window.localStorage.getItem('token');
-    console.log(token);
+    // console.log(token);
     if (token) {
       next();
     } else {

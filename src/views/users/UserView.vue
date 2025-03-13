@@ -256,7 +256,6 @@
 </template>
 
 <script lang="ts" setup>
-import useCounter from "../../mixins";
 import { Search, ArrowRight, Delete, Edit } from "@element-plus/icons-vue";
 import {
   FormRules,
@@ -271,8 +270,12 @@ import type { AxiosInstance } from "axios";
 //
 // const { resetForm } = useCounter;
 // import resetForm from "../../hooks/index";
+import { usePage } from "../../hooks";
+
+const { resetForm, userInfo, get_userinfo, pag } = usePage();
 
 const http = inject<AxiosInstance>("http");
+
 // 管理员修改用户密码
 interface chpwdUserForm {
   id: number;
@@ -317,7 +320,7 @@ const chpwd = (formEl: FormInstance | undefined) => {
   if (!formEl) return;
   formEl.validate(async (vaild) => {
     const { data: response } = await http.post(
-      `users/${chpwdFormData.id}/setuserspwd/`,
+      `users/mgr/${chpwdFormData.id}/setuserspwd/`,
       chpwdFormData
     );
     if (response.code) {
@@ -376,7 +379,7 @@ const editUser = (formEl: FormInstance | undefined) => {
   formEl.validate(async (valid) => {
     if (valid) {
       const { id, username } = editUserFormData;
-      const response = await http.patch(`users/${id}/`, editUserFormData);
+      const response = await http.patch(`users/mgr/${id}/`, editUserFormData);
       if (response.data.code) {
         ElMessage({
           message: response.data.message,
@@ -401,7 +404,7 @@ const deleteUser = (row) => {
     type: "error",
   })
     .then(async () => {
-      const response = await http.delete(`users/${row.id}/`);
+      const response = await http.delete(`users/mgr/${row.id}/`);
       if (!response.data.code) {
         ElMessage({
           type: "success",
@@ -419,7 +422,7 @@ const get_isactive = async (row) => {
 
   // console.log(row.id);
   const id = row.id;
-  const response = await http.patch(`/users/${id}/`, {
+  const response = await http.patch(`/users/mgr/${id}/`, {
     is_active: row.is_active,
   });
   if (response.data.code) {
@@ -487,7 +490,7 @@ const addUser = (formEl: FormInstance | undefined) => {
 
     if (valid) {
       // console.log(userForm);
-      const { data: response } = await http.post("users/", userForm);
+      const { data: response } = await http.post("users/mgr/", userForm);
       // console.log(response);
       if (response.code) {
         ElMessage({
@@ -504,23 +507,7 @@ const addUser = (formEl: FormInstance | undefined) => {
   dialogFormVisible.value = false;
 };
 
-const resetForm = (formEl: FormInstance | undefined) => {
-  if (!formEl) return;
-  formEl.resetFields();
-};
-
 // 分页方法
-interface pagination {
-  total: number;
-  page: number;
-  size: number;
-}
-const pag = reactive<pagination>({
-  total: 0,
-  page: 1,
-  size: 1,
-});
-
 const handleCurrentChange = (val: number) => {
   getUserList(val);
 };
@@ -541,7 +528,7 @@ const getUserList = async (page = 1) => {
   // console.log(666);
 
   if (!page) page = 1;
-  const response = await http.get("users/", {
+  const response = await http.get("users/mgr/", {
     params: { page, username: search.data },
   });
   // console.log(response.data.results);
@@ -571,23 +558,6 @@ const tableRowClassName = ({
   //   return "success-row";
   // }
   // return "";
-};
-
-// 获取登录用户信息
-interface userForm {
-  id: number;
-  username: string;
-}
-const userInfo = reactive<userForm>({
-  id: 0,
-  username: "",
-});
-
-const get_userinfo = async () => {
-  const { data: response } = await http.get("users/whoami/");
-  console.log(response);
-  userInfo.id = response.user.id;
-  userInfo.username = response.user.username;
 };
 
 // 渲染前获取userlist

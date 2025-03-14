@@ -43,6 +43,14 @@ export const usePage = () => {
     size: 1,
   });
 
-  return { resetForm, userInfo, get_userinfo, pag }
+  // 搜索
+  interface searchForm {
+    data: string;
+  }
+  const search = reactive<searchForm>({
+    data: "",
+  });
+
+  return { resetForm, userInfo, get_userinfo, pag, search }
 }
 

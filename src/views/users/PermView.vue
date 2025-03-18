@@ -145,7 +145,7 @@ const edit = (formEl: FormInstance | undefined) => {
     }
   });
 
-  console.log();
+  // console.log();
 };
 
 // 分页方法
@@ -170,7 +170,7 @@ const getPermList = async (page = 1) => {
   const response = await http.get("users/perm/", {
     params: { page, search: search.data },
   });
-  console.log(response);
+  // console.log(response);
   permData.data = response.data.results;
   pag.total = response.data.pagination.total;
   pag.page = response.data.pagination.page;

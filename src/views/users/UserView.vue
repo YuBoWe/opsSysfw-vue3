@@ -57,6 +57,20 @@
           <el-tooltip
             class="box-item"
             effect="dark"
+            :content="'设置用户' + row.username + '角色'"
+            placement="left"
+            v-if="row.id !== 1"
+          >
+            <el-button
+              type="warning"
+              :icon="Avatar"
+              circle
+              @click="handleSetRole(row)"
+            />
+          </el-tooltip>
+          <el-tooltip
+            class="box-item"
+            effect="dark"
             :content="'编辑用户' + row.username"
             placement="left"
             v-if="row.id !== 1"
@@ -253,16 +267,48 @@
       </div>
     </template>
   </el-dialog>
+  <el-dialog
+    v-model="roleDialogFormVisible"
+    title="设置角色"
+    width="500"
+    @closed="resetTree"
+    draggable
+  >
+    <el-tree
+      ref="treeFormRef"
+      style="max-width: 600px"
+      :data="roleData.data"
+      show-checkbox
+      default-expand-all
+      node-key="id"
+      highlight-current
+      :props="defaultProps"
+      :default-checked-keys="selectIds.data"
+    />
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="roleDialogFormVisible = false">取消</el-button>
+        <el-button type="primary" @click="setRole"> 确认 </el-button>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 
 <script lang="ts" setup>
-import { Search, ArrowRight, Delete, Edit } from "@element-plus/icons-vue";
+import {
+  Search,
+  ArrowRight,
+  Delete,
+  Edit,
+  Avatar,
+} from "@element-plus/icons-vue";
 import {
   FormRules,
   FormInstance,
   ComponentSize,
   ElMessage,
   ElMessageBox,
+  ListItem,
 } from "element-plus";
 import { ref, inject, onBeforeMount, reactive } from "vue";
 import type { AxiosInstance } from "axios";
@@ -272,9 +318,73 @@ import type { AxiosInstance } from "axios";
 // import resetForm from "../../hooks/index";
 import { usePage } from "../../hooks";
 
-const { resetForm, userInfo, get_userinfo, pag } = usePage();
+const {
+  resetForm,
+  userInfo,
+  get_userinfo,
+  pag,
+  treeFormRef,
+  resetTree,
+  getCheckedKeys,
+} = usePage();
 
 const http = inject<AxiosInstance>("http");
+
+// 设置用户角色
+interface Tree {
+  id: number;
+  name: string;
+  children?: Tree[];
+}
+const roleDialogFormVisible = ref(false);
+const roleData = reactive<{ data: Tree[] }>({ data: [] });
+const selectIds = reactive<{ data: ListItem[] }>({ data: [] });
+const defaultProps = {
+  children: "children",
+  label: "name",
+};
+const currentUserId = ref();
+
+const handleSetRole = async (row) => {
+  currentUserId.value = row.id;
+  const { data: response } = await http.get(
+    `users/mgr/${currentUserId.value}/role/`
+  );
+  if (response.code) {
+    ElMessage({
+      message: response.message,
+      type: "error",
+    });
+  } else {
+    roleData.data = response.allRoles;
+    selectIds.data = response.roles;
+    roleDialogFormVisible.value = false;
+  }
+
+  roleDialogFormVisible.value = true;
+};
+
+const setRole = async () => {
+  const name = "tree";
+  const roles = getCheckedKeys();
+  console.log(currentUserId.value);
+
+  const { data: response } = await http.put(
+    `users/mgr/${currentUserId.value}/role/`,
+    {
+      roles,
+    }
+  );
+  if (response.code) {
+    ElMessage({
+      message: response.message,
+      type: "error",
+    });
+  } else {
+    ElMessage.success(`角色设置成功`);
+    roleDialogFormVisible.value = false;
+  }
+};
 
 // 管理员修改用户密码
 interface chpwdUserForm {
@@ -335,7 +445,7 @@ const chpwd = (formEl: FormInstance | undefined) => {
     }
   });
 
-  console.log("修改密码");
+  // console.log("修改密码");
 };
 
 // 修改用户email及phone
@@ -368,10 +478,10 @@ const handleEdit = (row) => {
 };
 
 const editUser = (formEl: FormInstance | undefined) => {
-  console.log("修改用户信息");
+  // console.log("修改用户信息");
 
   if (!formEl) {
-    console.log(formEl);
+    // console.log(formEl);
 
     return;
   }
@@ -388,7 +498,7 @@ const editUser = (formEl: FormInstance | undefined) => {
       } else {
         ElMessage.success(`用户${username}修改成功`);
         getUserList(pag.page);
-        console.log("用户修改成功");
+        // console.log("用户修改成功");
 
         editDialogFormVisible.value = false;
       }

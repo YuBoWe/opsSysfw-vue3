@@ -1,7 +1,9 @@
 import type {
   FormInstance,
+  ComponentSize,
+  ElTree
 } from "element-plus";
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import axios from 'axios'
 axios.defaults.baseURL = '/api';
 
@@ -25,8 +27,8 @@ export const usePage = () => {
 
   const get_userinfo = async () => {
     const { data: response } = await axios.get("users/mgr/whoami/");
-    console.log(1111);
-    console.log(response);
+    // console.log(1111);
+    // console.log(response);
     userInfo.id = response.user.id;
     userInfo.username = response.user.username;
   };
@@ -51,6 +53,18 @@ export const usePage = () => {
     data: "",
   });
 
-  return { resetForm, userInfo, get_userinfo, pag, search }
+  const treeFormRef = ref<InstanceType<typeof ElTree>>();
+  
+  const resetTree = () => {
+    treeFormRef.value!.setCheckedKeys([], false);
+  };
+
+  const getCheckedKeys = () => {
+    return treeFormRef.value!.getCheckedKeys(false);
+  };
+
+  const formSize = ref<ComponentSize>("default");
+
+  return { resetForm, userInfo, get_userinfo, pag, search, formSize, treeFormRef, resetTree, getCheckedKeys }
 }
 

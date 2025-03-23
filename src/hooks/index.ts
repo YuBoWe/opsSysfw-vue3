@@ -53,18 +53,24 @@ export const usePage = () => {
     data: "",
   });
 
+  // 树形控件
   const treeFormRef = ref<InstanceType<typeof ElTree>>();
-  
+  // // 清除
   const resetTree = () => {
     treeFormRef.value!.setCheckedKeys([], false);
   };
-
+  // // 获取树形控件选中的keys
   const getCheckedKeys = () => {
     return treeFormRef.value!.getCheckedKeys(false);
   };
-
+  
+  // 默认表单size
   const formSize = ref<ComponentSize>("default");
 
   return { resetForm, userInfo, get_userinfo, pag, search, formSize, treeFormRef, resetTree, getCheckedKeys }
+}
+
+export const cmdbPage = () => {
+  
 }
 

@@ -256,7 +256,7 @@ const handleCurrentChange = (val: number) => {
 const getRoleList = async (page = 1) => {
   if (!page) page = 1;
   const response = await http.get("users/role/", {
-    params: { page, name: search.data },
+    params: { page, search: search.data },
   });
 
   RoleFormData.data = response.data.results;

@@ -4,9 +4,6 @@
       <div class="logo">
         <img class="image" src="../assets/vue.svg" />
         <div class="slogan">后端服务器资产管理系统</div>
-        <el-icon class="switch" @click="isCollapse = !isCollapse"
-          ><Switch
-        /></el-icon>
       </div>
       <div class="person">
         <el-dropdown trigger="hover" @command="handleCommand">
@@ -29,6 +26,9 @@
     </el-header>
     <el-container>
       <el-aside :width="isCollapse ? '64px' : '200px'">
+        <div class="menu-switch" @click="isCollapse = !isCollapse">
+          {{ isCollapse ? "展开>" : "<收起" }}
+        </div>
         <el-menu
           router
           :default-active="defaultActive.data"
@@ -42,7 +42,8 @@
             :key="item.id"
           >
             <template #title>
-              <el-icon><location /></el-icon>
+              <el-icon v-if="item.name === '用户管理'"><User /></el-icon>
+              <el-icon v-if="item.name === '资产管理'"><Money /></el-icon>
               <span>{{ item.name }}</span>
             </template>
             <el-menu-item
@@ -50,7 +51,8 @@
               v-for="sub in item.children"
               :key="sub.id"
               :route="{ name: sub.name }"
-              >{{ sub.name }}
+              ><el-icon><Location /></el-icon>
+              <span>{{ sub.name }}</span>
             </el-menu-item>
           </el-sub-menu>
         </el-menu>
@@ -193,7 +195,13 @@ const chpwd = (formEl: FormInstance | undefined) => {
 };
 
 // 右上角用户下拉菜单
-import { SwitchButton, EditPen } from "@element-plus/icons-vue";
+import {
+  SwitchButton,
+  EditPen,
+  User,
+  Money,
+  Location,
+} from "@element-plus/icons-vue";
 const handleCommand = (command: string | number | object) => {
   if (command === "exit") {
     exit();
@@ -252,11 +260,21 @@ const isCollapse = ref(false);
 </script>
 
 <style lang="less" scoped>
+.menu-switch {
+  background: grey;
+  font-size: 10px;
+  line-height: 24px;
+  color: white;
+  text-align: center;
+  letter-spacing: 0.2rem;
+  cursor: pointer;
+}
 .el-container {
   height: 100%;
 }
 .el-aside {
   background-color: #2c3e50;
+  position: relative;
 }
 
 .el-main {
@@ -275,11 +293,6 @@ const isCollapse = ref(false);
   .slogan {
     font-size: 30px;
     padding-left: 2px;
-  }
-  .switch {
-    font-size: 38px;
-    margin-left: 5px;
-    margin-top: 2px;
   }
   .person {
     margin-top: 5px;

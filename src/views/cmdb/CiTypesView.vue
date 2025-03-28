@@ -24,7 +24,7 @@
             </el-input>
           </el-col>
           <el-button type="primary" plain @click="dialogFormVisible = true"
-            >添加资产</el-button
+            >添加资产类型</el-button
           >
         </el-row>
       </div>
@@ -41,6 +41,14 @@
               placement="left"
             >
               <el-button type="primary" :icon="Setting" circle />
+            </el-tooltip>
+            <el-tooltip
+              class="box-item"
+              effect="dark"
+              :content="'添加' + row.label + '的子字段'"
+              placement="left"
+            >
+              <el-button type="primary" :icon="Plus" circle />
             </el-tooltip>
           </template>
         </el-table-column>
@@ -111,7 +119,7 @@ import {
   ElTree,
   ListItem,
 } from "element-plus";
-import { Search, ArrowRight, Setting } from "@element-plus/icons-vue";
+import { Search, ArrowRight, Setting, Plus } from "@element-plus/icons-vue";
 import { reactive, inject, onBeforeMount, ref } from "vue";
 import type { AxiosInstance } from "axios";
 import { usePage } from "../../hooks";

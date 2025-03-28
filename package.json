@@ -10,11 +10,16 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/addon-web-links": "^0.11.0",
+    "@xterm/xterm": "^5.5.0",
     "axios": "^1.7.9",
     "core-js": "^3.40.0",
     "element-plus": "^2.9.4",
+    "lodash": "^4.17.21",
     "vue": "^3.5.13",
-    "vue-router": "^4.5.0"
+    "vue-router": "^4.5.0",
+    "xterm-style": "^1.1.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.26.4",
@@ -28,6 +33,7 @@
     "globals": "^16.0.0",
     "less": "^4.2.2",
     "less-loader": "^12.2.0",
+    "sass-embedded": "^1.86.0",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.24.1",
     "vite": "^6.1.0",

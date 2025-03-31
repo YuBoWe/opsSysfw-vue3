@@ -99,9 +99,31 @@
           type="datetime"
           placeholder="Select date and time"
         />
-        <el-button v-if="domain.type.startsWith('list:')" type="success" text>
-          添加
-        </el-button>
+        <div v-if="domain.type.startsWith('list:')">
+          <el-button type="success" text @click="addDomain(domain)">
+            添加
+          </el-button>
+          <el-card
+            v-for="(def, i) in domain.fieldDef"
+            :key="`${domain.name}.def.${i}`"
+          >
+            <!-- <p>{{ def }} {{ i }}</p> -->
+            <el-form-item
+              v-for="(subDomain, j) in def"
+              :key="subDomain.name"
+              :label="subDomain.label"
+              :prop="'domains.' + index + '.fieldDef.' + i + '.' + j + '.value'"
+              :rules="{
+                required: subDomain.required,
+                message: '字段不能为空',
+                trigger: 'blur',
+              }"
+            >
+              <!-- <p>{{ subDomain }} {{ j }}</p> -->
+              <el-input v-model="subDomain.value" />
+            </el-form-item>
+          </el-card>
+        </div>
       </el-form-item>
     </el-form>
 
@@ -131,6 +153,57 @@ import { usePage } from "../../hooks";
 const { pag, search, formSize, resetForm } = usePage();
 const http = inject<AxiosInstance>("http");
 
+// 嵌套添加
+interface DomainItem {
+  label: string;
+  name: string;
+  requried: boolean;
+  value: string;
+  fieldDef: ListItem[];
+}
+
+const formRef = ref<FormInstance>();
+
+const dynamicValidateForm = reactive<{
+  domains: DomainItem[];
+}>({
+  domains: [],
+});
+
+const addDomain = (value) => {
+  console.log(value);
+  const name = value.type.split(":")[1];
+  console.log(name);
+
+  getNestFields(name, value);
+
+  // addNestDataForm.domains.push({})
+};
+
+const getNestFields = async (name, domain) => {
+  // console.log(name);
+
+  const response = await http.get("cmdb/citypes/getNestFields/", {
+    params: { name },
+  });
+
+  const newFields = response.data.fields.map((field) => ({
+    ...field,
+    value: "",
+  }));
+  if (!Array.isArray(domain.fieldDef)) {
+    domain.fieldDef = []; // 确保 fieldDef 是数组
+  }
+
+  // 将所有新字段添加到 fieldDef 中
+  // const domains = [];
+  // domains.push(newFields);
+  // console.log(domain.fieldDef);
+
+  domain.fieldDef.push(newFields);
+  console.log(domain.fieldDef[0]);
+};
+
 // 添加资产
 import type { CascaderProps } from "element-plus";
 const dialogVisible = ref(false);
@@ -148,6 +221,7 @@ const CiTypeProps: CascaderProps = {
       if (level >= 1) {
         // 模拟异步请求获取数据
         const response = await http.get("cmdb/citypes/all_name/");
+        console.log(response.data);
 
         // 检查 response.data 是否有效
         if (!Array.isArray(response.data)) {
@@ -180,23 +254,10 @@ const CiTypeProps: CascaderProps = {
 const fromRef = ref<FormInstance>();
 
 // 当选中节点变化时触发获取表单项
-interface DomainItem {
-  label: string;
-  name: string;
-  requried: boolean;
-  value: string;
-}
 
-const formRef = ref<FormInstance>();
-
-const dynamicValidateForm = reactive<{
-  domains: DomainItem[];
-}>({
-  domains: [],
-});
-
-const getFields = async (item) => {
+const getFields = async (item, data = dynamicValidateForm) => {
   if (!item || item.length === 0) return;
+
   const id = item[item.length - 1];
   selectedCiTypeId.value = id;
   // console.log(id);
@@ -204,9 +265,10 @@ const getFields = async (item) => {
     const response = await http.get(`cmdb/citypes/${id}/`);
     selectCiTypeLabel.value = response.data.label;
     // console.log(response.data.fields);
-    dynamicValidateForm.domains = response.data.fields.map((field) => ({
+    data.domains = response.data.fields.map((field) => ({
       ...field,
       value: "", // 初始化 value 属性
+      fieldDef: [],
     }));
   } catch (error) {
     ElMessage.error("获取字段失败:", error);
@@ -245,7 +307,7 @@ const clearCheckedNodes = () => {
   dynamicValidateForm.domains = [];
 };
 
-// getCis
+// 获取资产
 interface CiForm {
   data: DynamicSizeListInstance;
 }
@@ -257,11 +319,17 @@ const getCis = async (page = 1) => {
   const response = await http.get("cmdb/cis/", {
     params: { page, name: search.data },
   });
-
-  CiFormData.data = response.data.results;
-  pag.total = response.data.pagination.total;
-  pag.page = response.data.pagination.page;
-  pag.size = response.data.pagination.size;
+  if (response.data.code) {
+    ElMessage({
+      message: response.data.message,
+      type: "error",
+    });
+  } else {
+    CiFormData.data = response.data.results;
+    pag.total = response.data.pagination.total;
+    pag.page = response.data.pagination.page;
+    pag.size = response.data.pagination.size;
+  }
 };
 
 const handleCurrentChange = (val: number) => {
@@ -276,6 +344,7 @@ const tableColumns = computed(() => {
   let maxFieldCount = 0;
 
   for (const record of CiFormData.data) {
+    // console.log(record);
     const fieldCount = Object.keys(record).filter(
       (key) => key !== "ci_typeId" && key !== "id"
     ).length;
@@ -304,5 +373,9 @@ onBeforeMount(() => {
 <style lang="less" scoped>
 .demo-dynamic {
   margin: 20px;
+}
+
+.el-form-item .el-form-item {
+  margin-bottom: 22px;
 }
 </style>

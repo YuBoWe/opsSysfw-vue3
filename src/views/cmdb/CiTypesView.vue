@@ -37,14 +37,6 @@
             <el-tooltip
               class="box-item"
               effect="dark"
-              :content="'修改' + row.label + '名'"
-              placement="left"
-            >
-              <el-button type="primary" :icon="Setting" circle />
-            </el-tooltip>
-            <el-tooltip
-              class="box-item"
-              effect="dark"
               :content="'添加' + row.label + '的子字段'"
               placement="left"
             >
@@ -108,6 +100,48 @@
       </div>
     </template>
   </el-dialog>
+  <!-- TODO 添加类型的子类型字段 -->
+  <!-- <el-dialog
+    v-model="dialogVisible"
+    title="添加资产类型"
+    width="500"
+    @closed="resetForm(addCiTypeFieldRef)"
+    draggable
+  >
+    <el-form
+      :model="addCiTypeFormData"
+      ref="addCiTypeFormRef"
+      :rules="rules"
+      :size="formSize"
+      label-width="auto"
+    >
+    <el-card>
+        <el-form-item
+      v-for="(domain, index) in dynamicValidateForm.domains"
+      :key="domain.key"
+      :label="'Domain' + index"
+      :prop="'domains.' + index + '.value'"
+      :rules="{
+        required: true,
+        message: 'domain can not be null',
+        trigger: 'blur',
+      }"
+    >
+      <el-input v-model="domain.value" />
+      <el-button class="mt-2" @click.prevent="removeDomain(domain)">
+        Delete
+      </el-button>
+    </el-form-item>
+    <el-card>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">取消</el-button>
+        <el-button type="primary" @click="addCiType(addCiTypeFormRef)">
+          确认
+        </el-button>
+      </div>
+    </template>
+  </el-dialog> -->
 </template>
 
 <script lang="ts" setup>
@@ -127,6 +161,9 @@ import { usePage } from "../../hooks";
 const { pag, search, formSize, resetForm } = usePage();
 
 const http = inject<AxiosInstance>("http");
+// TODO 添加类型的子类型字段
+const dialogVisible = ref(false);
+const addCiTypeFieldRef = ref<FormInstance>();
 
 // 添加资产类型
 const dialogFormVisible = ref(false);

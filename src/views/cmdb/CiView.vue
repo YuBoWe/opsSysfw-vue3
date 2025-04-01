@@ -28,7 +28,7 @@
           >
         </el-row>
       </div>
-      <el-table :data="CiFormData.data" border style="width: 100%">
+      <el-table :data="flattenData" border style="width: 100%">
         <el-table-column type="index" width="50" />
         <el-table-column
           v-for="(column, key) in tableColumns"
@@ -41,10 +41,15 @@
             <el-tooltip
               class="box-item"
               effect="dark"
-              :content="'修改' + row.label"
+              :content="'删除' + row.name"
               placement="left"
             >
-              <el-button type="primary" :icon="Setting" circle />
+              <el-button
+                type="danger"
+                :icon="Delete"
+                circle
+                @click="deleteCi"
+              />
             </el-tooltip>
           </template>
         </el-table-column>
@@ -145,21 +150,23 @@ import {
   ListItem,
   DynamicSizeListInstance,
 } from "element-plus";
-import { Search, ArrowRight, Setting, Plus } from "@element-plus/icons-vue";
+import { Search, ArrowRight, Delete, Plus } from "@element-plus/icons-vue";
 import { reactive, inject, onBeforeMount, ref, computed } from "vue";
 import type { AxiosInstance } from "axios";
 import { usePage } from "../../hooks";
 
 const { pag, search, formSize, resetForm } = usePage();
 const http = inject<AxiosInstance>("http");
+// TODO 删除资产
+const deleteCi = () => {};
 
 // 嵌套添加
 interface DomainItem {
   label: string;
   name: string;
   requried: boolean;
-  value: string;
-  fieldDef: ListItem[];
+  value: string | ListItem[];
+  fieldDef: DomainItem[];
 }
 
 const formRef = ref<FormInstance>();
@@ -182,6 +189,7 @@ const addDomain = (value) => {
 
 const getNestFields = async (name, domain) => {
   // console.log(name);
+  domain.value = name;
 
   const response = await http.get("cmdb/citypes/getNestFields/", {
     params: { name },
@@ -275,15 +283,27 @@ const getFields = async (item, data = dynamicValidateForm) => {
   }
 };
 
+// 处理嵌套的 DomainItem
+const extractValues = (items: DomainItem[]): Record<string, any> => {
+  return items.reduce((acc, item) => {
+    acc[item.name] = {};
+    acc[item.name].value = item.value;
+    if (item.fieldDef && item.fieldDef.length > 0) {
+      acc[item.name].fieldDef = item.fieldDef;
+    }
+    return acc;
+  }, {} as Record<string, any>);
+};
+
 const handleSet = (formEl: FormInstance | undefined) => {
   if (!formEl) return;
   formEl.validate(async (valid) => {
     if (valid) {
       try {
-        const payload = dynamicValidateForm.domains.reduce((acc, domain) => {
-          acc[domain.name] = domain.value;
-          return acc;
-        }, {});
+        // console.log(dynamicValidateForm.domains);
+        const payload = extractValues(dynamicValidateForm.domains);
+        // console.log(payload);
+
         // 添加 CiType 到 payload
         payload["ci_typeId"] = selectedCiTypeId.value;
         payload["ci_type"] = selectCiTypeLabel.value;
@@ -314,6 +334,21 @@ interface CiForm {
 
 const CiFormData = reactive<{ data: CiForm[] }>({ data: [] });
 
+// 将CiForm中的对象中的value取出
+const flattenData = computed(() => {
+  return CiFormData.data.map((row) => {
+    const flatRow: Record<string, any> = {};
+    Object.keys(row).forEach((key) => {
+      if (typeof row[key] === "object" && row[key] !== null) {
+        flatRow[key] = row[key].value;
+      } else {
+        flatRow[key] = row[key];
+      }
+    });
+    return flatRow;
+  });
+});
+
 const getCis = async (page = 1) => {
   if (!page) page = 1;
   const response = await http.get("cmdb/cis/", {
@@ -326,6 +361,8 @@ const getCis = async (page = 1) => {
     });
   } else {
     CiFormData.data = response.data.results;
+    console.log(CiFormData.data);
+
     pag.total = response.data.pagination.total;
     pag.page = response.data.pagination.page;
     pag.size = response.data.pagination.size;
@@ -344,7 +381,6 @@ const tableColumns = computed(() => {
   let maxFieldCount = 0;
 
   for (const record of CiFormData.data) {
-    // console.log(record);
     const fieldCount = Object.keys(record).filter(
       (key) => key !== "ci_typeId" && key !== "id"
     ).length;
@@ -358,12 +394,17 @@ const tableColumns = computed(() => {
 
   for (const key in maxFieldsRecord) {
     if (key !== "ci_typeId" && key !== "id") {
-      columns[key] = { label: key.charAt(0).toUpperCase() + key.slice(1) };
+      columns[key] = { label: formatLabel(key) };
     }
   }
 
   return columns;
 });
+
+// 格式化标签
+const formatLabel = (key: string): string => {
+  return key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, " ");
+};
 
 onBeforeMount(() => {
   getCis();

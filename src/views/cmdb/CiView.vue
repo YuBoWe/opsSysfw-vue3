@@ -48,7 +48,7 @@
                 type="danger"
                 :icon="Delete"
                 circle
-                @click="deleteCi"
+                @click="deleteCi(row)"
               />
             </el-tooltip>
           </template>
@@ -138,6 +138,16 @@
         <el-button type="primary" @click="handleSet(formRef)"> 确认 </el-button>
       </div>
     </template>
+    <!-- 删除资产 -->
+  </el-dialog>
+  <el-dialog v-model="DeletedialogVisible" title="警告" width="500" center>
+    <span> 确定删除该资产吗？ </span>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="DeletedialogVisible = false">否</el-button>
+        <el-button type="danger" @click="setDeleteCi"> 是 </el-button>
+      </div>
+    </template>
   </el-dialog>
 </template>
 <script lang="ts" setup>
@@ -158,7 +168,28 @@ import { usePage } from "../../hooks";
 const { pag, search, formSize, resetForm } = usePage();
 const http = inject<AxiosInstance>("http");
 // TODO 删除资产
-const deleteCi = () => {};
+const DeletedialogVisible = ref(false);
+const deleteCiId = ref(0);
+const deleteCiName = ref("");
+const deleteCi = (row) => {
+  // console.log(row.id);
+
+  deleteCiId.value = row.id;
+  deleteCiName.value = row.name;
+  DeletedialogVisible.value = true;
+};
+
+const setDeleteCi = async () => {
+  const response = await http.delete(`cmdb/cis/${deleteCiId.value}/`);
+  // console.log(response);
+  if (response.data.code) {
+    ElMessage.error(response.data.message);
+  } else {
+    ElMessage.success(`删除资产${deleteCiName.value}成功`);
+    DeletedialogVisible.value = false;
+    getCis();
+  }
+};
 
 // 嵌套添加
 interface DomainItem {

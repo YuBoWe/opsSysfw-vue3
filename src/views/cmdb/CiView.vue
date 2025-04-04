@@ -383,7 +383,7 @@ const flattenData = computed(() => {
 const getCis = async (page = 1) => {
   if (!page) page = 1;
   const response = await http.get("cmdb/cis/", {
-    params: { page, name: search.data },
+    params: { page, search: search.data },
   });
   if (response.data.code) {
     ElMessage({

@@ -13,6 +13,10 @@
 
           <template #dropdown>
             <el-dropdown-menu>
+              <el-dropdown-item :icon="House" command="gohome"
+                >首页</el-dropdown-item
+              >
+
               <el-dropdown-item :icon="EditPen" command="chpwd"
                 >修改密码</el-dropdown-item
               >
@@ -201,12 +205,17 @@ import {
   User,
   Money,
   Location,
+  House,
 } from "@element-plus/icons-vue";
+import router from "../router";
+
 const handleCommand = (command: string | number | object) => {
   if (command === "exit") {
     exit();
   } else if (command === "chpwd") {
     chpwdDialogFormVisible.value = true;
+  } else if (command === "gohome") {
+    router.push("/welcome");
   }
 };
 

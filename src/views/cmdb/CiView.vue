@@ -51,6 +51,14 @@
                 @click="deleteCi(row)"
               />
             </el-tooltip>
+            <el-tooltip
+              class="box-item"
+              effect="dark"
+              :content="'更新' + row.name"
+              placement="left"
+            >
+              <el-button :icon="Refresh" circle @click="getServerInfo(row)" />
+            </el-tooltip>
           </template>
         </el-table-column>
       </el-table>
@@ -160,13 +168,69 @@ import {
   ListItem,
   DynamicSizeListInstance,
 } from "element-plus";
-import { Search, ArrowRight, Delete, Plus } from "@element-plus/icons-vue";
+import {
+  Search,
+  ArrowRight,
+  Delete,
+  Plus,
+  Refresh,
+} from "@element-plus/icons-vue";
 import { reactive, inject, onBeforeMount, ref, computed } from "vue";
 import type { AxiosInstance } from "axios";
 import { usePage } from "../../hooks";
 
 const { pag, search, formSize, resetForm } = usePage();
 const http = inject<AxiosInstance>("http");
+// 获取服务器信息
+interface ServerInfoForm {
+  ipadd_in: string;
+  cpu: string;
+  cpu_cores: number;
+  cpu_count: number;
+  disk: string;
+  host_name: string;
+  mem: number;
+  os_kernel: string;
+  sn: string;
+  sysinfo: string;
+}
+
+const serverData = reactive<{ data: ServerInfoForm[] }>({ data: [] });
+
+const getTooltipContent = (row) => {};
+
+const getServerInfo = async (row) => {
+  console.log(row);
+  const hostname = row.name;
+  const ipadd_in = row["Management IP"];
+  console.log(hostname, ipadd_in);
+  const response = await http.get("cmdb/serverinfo/postmachineinfo/", {
+    params: { hostname, ipadd_in },
+  });
+  if (response.data.code) {
+    ElMessage.error("获取该服务器信息失败");
+  } else {
+    serverData.data = response.data;
+    console.log(CiFormData.data);
+    var i = -1;
+    for (const value of CiFormData.data) {
+      console.log(value);
+      console.log(value["name"].value);
+      i++;
+      if (
+        value["name"].value === hostname &&
+        value["Management IP"].value === ipadd_in
+      ) {
+        // console.log(i);
+        console.log(serverData.data["mem"]);
+        console.log(serverData.data["mem"].toString());
+        CiFormData.data[i]["RAM"].value = serverData.data["mem"].toString();
+        CiFormData.data[i]["CPU"].value = serverData.data["cpu"];
+      }
+    }
+  }
+};
+
 // TODO 删除资产
 const DeletedialogVisible = ref(false);
 const deleteCiId = ref(0);
@@ -405,6 +469,7 @@ const handleCurrentChange = (val: number) => {
 };
 
 // 计算表格列
+const columns = reactive({});
 const tableColumns = computed(() => {
   if (CiFormData.data.length === 0) return {};
 
@@ -420,14 +485,12 @@ const tableColumns = computed(() => {
       maxFieldsRecord = record;
     }
   }
-
-  const columns: Record<string, { label: string }> = {};
-
   for (const key in maxFieldsRecord) {
     if (key !== "ci_typeId" && key !== "id") {
       columns[key] = { label: formatLabel(key) };
     }
   }
+  console.log(1);
 
   return columns;
 });
